@@ -21,10 +21,21 @@ function App() {
     try {
       const response = await axios.get('https://api-coparelampago.vercel.app/user/get-partidos');
       const todosLosPartidos = response.data;
-      const partidosJornada2 = todosLosPartidos.filter(partido => partido.jornada === 4);
 
-      setPartidos(partidosJornada2);
-      updateLocalStorage('partidos', partidosJornada2);
+      if (categoriaSeleccionada) {
+        const partidosFiltrados = todosLosPartidos.filter(partido => partido.id_categoria.toString() === categoriaSeleccionada);
+        if (partidosFiltrados.length > 0) {
+          const maxJornada = Math.max(...partidosFiltrados.map(partido => partido.jornada));
+          const partidosUltimaJornada = partidosFiltrados.filter(partido => partido.jornada === maxJornada);
+
+          setPartidos(partidosUltimaJornada);
+          updateLocalStorage('partidos', partidosUltimaJornada);
+        } else {
+          setPartidos([]);
+        }
+      } else {
+        setPartidos([]);
+      }
     } catch (error) {
       console.error('Error fetching partidos:', error);
     }
@@ -34,12 +45,11 @@ function App() {
     try {
       const response = await axios.get('https://api-coparelampago.vercel.app/user/get-categorias');
       const categorias = response.data;
-      const categoriasList = categorias.filter((c) => c.id_edicion === 1)
-      setCategorias(categoriasList);
-      updateLocalStorage('categorias', categoriasList);
+      setCategorias(categorias);
+      updateLocalStorage('categorias', categorias);
 
-      if (categoriasList.length > 0 && !categoriaSeleccionada) {
-        setCategoriaSeleccionada(categoriasList[0].id_categoria.toString());
+      if (categorias.length > 0 && !categoriaSeleccionada) {
+        setCategoriaSeleccionada(categorias[0].id_categoria.toString());
       }
     } catch (error) {
       console.error('Error fetching categorias:', error);
@@ -60,22 +70,22 @@ function App() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([getPartidos(), getCategorias(), getEquipos()]);
+      await Promise.all([getCategorias(), getEquipos()]);
+      await getPartidos();
     };
 
     loadData();
-  }, []);
+  }, [categoriaSeleccionada]);
 
   useEffect(() => {
     localStorage.setItem('categoriaSeleccionada', categoriaSeleccionada);
+    getPartidos();
   }, [categoriaSeleccionada]);
-
-  const partidosFiltrados = partidos.filter(partido => partido.id_categoria.toString() === categoriaSeleccionada);
 
   const handleCategoriaChange = (e) => {
     setCategoriaSeleccionada(e.target.value);
   };
-
+  
   return (
     <LayoutWrapper>
       <img src="https://coparelampago.com/uploads/CR/logoCopaRelampago.png" className="logo" alt="Logo Copa Relámpago"/>
@@ -88,8 +98,8 @@ function App() {
         ))}
       </Select>
 
-      {partidosFiltrados.length > 0 ? (
-        partidosFiltrados.map((partido) => (
+      {partidos.length > 0 ? (
+        partidos.map((partido) => (
           <CardPartido key={partido.id_partido} partido={partido} />
         ))
       ) : (

@@ -58,8 +58,18 @@ const CardPartido = ({ partido }) => {
                     <h4>{equipoLocal ? equipoLocal.nombre : 'Equipo Local'}</h4>
                 </CardPartidoTeam>
                 <CardPartidoInfo>
-                    <h5>{formatHora(partido.hora)}</h5>
-                    <p>{partido.dia_nombre} {partido.dia_numero}/0{partido.mes}</p>
+                    {
+                        partido.estado === 'S' ? (
+                            <>
+                                <h5 style={{color: 'var(--red)'}}>POSTERGADO</h5>
+                            </>
+                        ) : (
+                            <>
+                                <h5>{formatHora(partido.hora)}</h5>
+                                <p>{partido.dia_nombre} {partido.dia_numero}/0{partido.mes}</p>
+                            </>
+                        )
+                    }
                 </CardPartidoInfo>
                 <CardPartidoTeam>
                     <img src={equipoVisita?.img ? `https://www.coparelampago.com/${equipoVisita.img}` : 'https://www.coparelampago.com/uploads/Equipos/team-default.png'} alt={equipoVisita ? equipoVisita.nombre : 'Equipo Visita'} />
